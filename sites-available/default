@@ -1,0 +1,11 @@
+PORT=8000
+
+ROOT=/www
+USER=tecs
+
+ACCESS_LOG=/var/www/bashttp.access.log
+ERROR_LOG=/var/www/bashttp.error.log
+
+INDEX=( index.sh index.php index.html )
+LISTING=1
+HANDLERS=( sh:bash php:php )
