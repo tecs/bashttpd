@@ -4,6 +4,9 @@ source $2
 source "$CONFIG_PATH/$1"
 
 if [ "" != "$3" ] ; then
+	ss () {
+		echo $1 | sed -e 's/[\/&]/\\&/g'
+	}
 	request () {
 		if [ ! -r "$1" ] ; then
 			error 403
@@ -32,23 +35,20 @@ if [ "" != "$3" ] ; then
 		exit 0
 	}
 	
-	filelist () { 
+	filelist () {
+		REPEAT=$(grep -E '<FILELIST>(.*)<\/FILELIST>' doc/index.htm | sed -r 's/<FILELIST>(.*)<\/FILELIST>/\1/')
 		FILELIST=$(
-			echo "<a href=\"${url%/}/..\">..</a><br/> <br/>"
 			cd "$1"
 			for f in `ls`; do
 				href="${url%/}/$f"
-				echo "<a href=\"$href\">$f</a><br/>"
+				echo $REPEAT | sed -e "s/FILE_NAME/$(ss "$f")/" -e "s/FILE_HREF/$(ss "$href")/"
 			done
 		)
-		
-		FILELIST=$(echo $FILELIST | sed -e 's/[\/&]/\\&/g')
-		FILENAME=$(echo $1 | sed -e 's/[\/&]/\\&/g')
 		
 		echo -e "HTTP/1.1 200 OK\r"
 		echo -e "Content-Type: text/html\r"
 		echo -e "\r"
-		sed -e "s/DIRNAME/$FILENAME/" -e "s/FILELIST/$FILELIST/" doc/index.htm
+		sed -e "s/DIRNAME/$(ss "$1")/" -e "s/UP_HREF/$(ss "${url%/}/..")/" -e "s/<FILELIST>.*<\/FILELIST>/$(ss "$FILELIST")/" doc/index.htm
 		echo -e "\r"
 		
 		exit 0
